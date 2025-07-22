@@ -418,6 +418,7 @@ class ApiCallerServer {
   async run(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
+    console.error("API Caller MCP server running on stdio");
   }
 }
 
