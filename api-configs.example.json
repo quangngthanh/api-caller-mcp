@@ -1,0 +1,38 @@
+{
+  "github_api": {
+    "name": "github_api",
+    "baseUrl": "https://api.github.com",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/vnd.github.v3+json"
+    },
+    "authentication": {
+      "type": "bearer",
+      "token": "your_github_token_here"
+    }
+  },
+  "openai_api": {
+    "name": "openai_api", 
+    "baseUrl": "https://api.openai.com/v1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "authentication": {
+      "type": "bearer",
+      "token": "your_openai_api_key_here"
+    }
+  },
+  "custom_api": {
+    "name": "custom_api",
+    "baseUrl": "https://your-api.com/v1",
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "MCP-API-Caller/1.0"
+    },
+    "authentication": {
+      "type": "api_key",
+      "apiKey": "your_api_key_here",
+      "headerName": "X-API-Key"
+    }
+  }
+}
