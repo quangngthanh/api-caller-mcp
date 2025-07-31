@@ -1,65 +1,127 @@
 # MCP API Caller
 
-MCP server for making API calls with authentication support.
+A Model Context Protocol (MCP) server for making API calls with authentication support.
 
-## Tính năng
+## Features
 
-- ✅ Hỗ trợ nhiều loại authentication (Bearer Token, API Key, Basic Auth)
-- ✅ Các HTTP methods: GET, POST, PUT, DELETE
-- ✅ Quản lý nhiều API configurations
-- ✅ Query parameters và custom headers
-- ✅ Tự động lưu/load configurations
+- Configure multiple API endpoints with authentication
+- Support for Bearer token, API key, and Basic authentication
+- HTTP methods: GET, POST, PUT, DELETE
+- **NEW**: Form data POST requests with file upload support
 
-## Cài đặt
+## Tools
 
-### 1. Cài đặt dependencies
+### 1. `set_api_config`
+Configure an API endpoint with authentication.
 
-```bash
-npm install
-```
+**Parameters:**
+- `name`: Configuration name
+- `baseUrl`: Base URL for the API
+- `headers`: Default headers (optional)
+- `authentication`: Authentication configuration (optional)
 
-### 2. Build project
+**Authentication Types:**
+- `bearer`: Bearer token authentication
+- `api_key`: API key authentication
+- `basic`: Basic authentication
 
-```bash
-npm run build
-```
+### 2. `list_api_configs`
+List all configured APIs.
 
-### 3. Cấu hình Claude Desktop
+### 3. `api_get`
+Make a GET request to a configured API.
 
-Thêm vào file `claude_desktop_config.json`:
+**Parameters:**
+- `configName`: Name of the API configuration
+- `endpoint`: API endpoint
+- `queryParams`: Query parameters (optional)
+- `headers`: Additional headers (optional)
 
+### 4. `api_post`
+Make a POST request with JSON body.
+
+**Parameters:**
+- `configName`: Name of the API configuration
+- `endpoint`: API endpoint
+- `body`: Request body (JSON)
+- `headers`: Additional headers (optional)
+
+### 5. `api_put`
+Make a PUT request with JSON body.
+
+**Parameters:**
+- `configName`: Name of the API configuration
+- `endpoint`: API endpoint
+- `body`: Request body (JSON)
+- `headers`: Additional headers (optional)
+
+### 6. `api_delete`
+Make a DELETE request.
+
+**Parameters:**
+- `configName`: Name of the API configuration
+- `endpoint`: API endpoint
+- `headers`: Additional headers (optional)
+
+### 7. `api_post_form` ⭐ NEW
+Make a POST request with form data (supports file uploads).
+
+**Parameters:**
+- `configName`: Name of the API configuration
+- `endpoint`: API endpoint
+- `fields`: Array of form fields
+- `headers`: Additional headers (optional)
+
+**Field Types:**
+- `text`: Text field with `value` parameter
+- `file`: File field with `filePath`, `fileName` (optional), and `contentType` (optional)
+
+## Usage Examples
+
+### Basic API Configuration
 ```json
 {
-  "mcpServers": {
-    "api-caller": {
-      "command": "node",
-      "args": ["...\\api-caller\\dist\\index.js"],
-      "env": {}
-    }
+  "name": "my_api",
+  "baseUrl": "https://api.example.com",
+  "headers": {
+    "User-Agent": "MCP-API-Caller/1.0"
+  },
+  "authentication": {
+    "type": "bearer",
+    "token": "your_token_here"
   }
 }
 ```
 
-## Sử dụng
-
-### 1. Thiết lập API Config
-
+### File Upload Example
+```json
+{
+  "configName": "my_api",
+  "endpoint": "/upload",
+  "fields": [
+    {
+      "name": "title",
+      "type": "text",
+      "value": "My Image"
+    },
+    {
+      "name": "image",
+      "type": "file",
+      "filePath": "/path/to/image.jpg",
+      "fileName": "custom_name.jpg",
+      "contentType": "image/jpeg"
+    }
+  ]
+}
 ```
-Thiết lập API config tên "github_api" với base URL "https://api.github.com" và bearer token "your_token"
-```
 
-### 2. Xem danh sách configs
+## Installation
 
-```
-Hiển thị tất cả API configurations
-```
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Build the project: `npm run build`
+4. Start the server: `npm start`
 
-### 3. Gọi API
+## Development
 
-```
-Gọi GitHub API để lấy thông tin user octocat
-```
-
-## Scripts
-
-- `npm run build` - Build TypeScript to JavaScript
+Run in development mode: `npm run dev`

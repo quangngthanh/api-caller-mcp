@@ -11,5 +11,12 @@
       "apiKey": "your_api_key_here",
       "headerName": "X-API-Key"
     }
+  },
+  "upload_api": {
+    "name": "upload_api",
+    "baseUrl": "https://httpbin.org",
+    "headers": {
+      "User-Agent": "MCP-API-Caller/1.0"
+    }
   }
 }

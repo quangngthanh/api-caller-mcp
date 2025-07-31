@@ -5,6 +5,7 @@ import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } f
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
+import FormData from "form-data";
 class ApiCallerServer {
     server;
     configPath;
@@ -228,6 +229,63 @@ class ApiCallerServer {
                         required: ["configName", "endpoint"],
                     },
                 },
+                {
+                    name: "api_post_form",
+                    description: "Make a POST request with form data (supports file uploads)",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            configName: {
+                                type: "string",
+                                description: "Name of the API configuration to use",
+                            },
+                            endpoint: {
+                                type: "string",
+                                description: "API endpoint (will be appended to baseUrl)",
+                            },
+                            fields: {
+                                type: "array",
+                                description: "Form fields (text or file)",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        name: {
+                                            type: "string",
+                                            description: "Field name",
+                                        },
+                                        type: {
+                                            type: "string",
+                                            enum: ["text", "file"],
+                                            description: "Field type",
+                                        },
+                                        value: {
+                                            type: "string",
+                                            description: "Text value (for text fields)",
+                                        },
+                                        filePath: {
+                                            type: "string",
+                                            description: "Path to file (for file fields)",
+                                        },
+                                        fileName: {
+                                            type: "string",
+                                            description: "Custom filename (optional for file fields)",
+                                        },
+                                        contentType: {
+                                            type: "string",
+                                            description: "Content type (optional for file fields)",
+                                        },
+                                    },
+                                    required: ["name", "type"],
+                                },
+                            },
+                            headers: {
+                                type: "object",
+                                description: "Additional headers for this request",
+                            },
+                        },
+                        required: ["configName", "endpoint", "fields"],
+                    },
+                },
             ],
         }));
         this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -246,6 +304,8 @@ class ApiCallerServer {
                         return this.handleApiRequest("PUT", args);
                     case "api_delete":
                         return this.handleApiRequest("DELETE", args);
+                    case "api_post_form":
+                        return this.handleApiPostForm(args);
                     default:
                         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
                 }
@@ -347,9 +407,87 @@ class ApiCallerServer {
             throw new McpError(ErrorCode.InternalError, `API request failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
+    async handleApiPostForm(args) {
+        const { configName, endpoint, fields, headers: additionalHeaders } = args;
+        // Get config
+        const config = this.configs[configName];
+        if (!config) {
+            throw new McpError(ErrorCode.InvalidParams, `API configuration '${configName}' not found`);
+        }
+        // Build URL
+        let url = `${config.baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+        // Build headers (remove Content-Type for form data)
+        const headers = this.buildHeaders(config, additionalHeaders);
+        delete headers["Content-Type"]; // Let FormData set the correct content type
+        // Create FormData
+        const formData = new FormData();
+        for (const field of fields) {
+            if (field.type === "text") {
+                if (field.value !== undefined) {
+                    formData.append(field.name, field.value);
+                }
+            }
+            else if (field.type === "file") {
+                if (field.filePath) {
+                    try {
+                        const fileStream = fs.createReadStream(field.filePath);
+                        const options = {};
+                        if (field.fileName) {
+                            options.filename = field.fileName;
+                        }
+                        if (field.contentType) {
+                            options.contentType = field.contentType;
+                        }
+                        formData.append(field.name, fileStream, options);
+                    }
+                    catch (error) {
+                        throw new McpError(ErrorCode.InvalidParams, `Failed to read file at path '${field.filePath}': ${error instanceof Error ? error.message : String(error)}`);
+                    }
+                }
+            }
+        }
+        // Build request options
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                ...headers,
+                ...formData.getHeaders(),
+            },
+            body: formData,
+        };
+        try {
+            const response = await fetch(url, requestOptions);
+            const responseText = await response.text();
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+            }
+            catch {
+                responseData = responseText;
+            }
+            const result = {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+                data: responseData,
+            };
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `POST ${url} (Form Data)\nStatus: ${response.status} ${response.statusText}\n\nResponse:\n${JSON.stringify(result.data, null, 2)}`,
+                    },
+                ],
+            };
+        }
+        catch (error) {
+            throw new McpError(ErrorCode.InternalError, `API form request failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
     async run() {
         const transport = new StdioServerTransport();
         await this.server.connect(transport);
+        console.error("API Caller MCP server running on stdio");
     }
 }
 const server = new ApiCallerServer();
