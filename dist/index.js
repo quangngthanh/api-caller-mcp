@@ -133,6 +133,20 @@ class ApiCallerServer {
                     },
                 },
                 {
+                    name: "delete_api_config",
+                    description: "Delete an API configuration",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            name: {
+                                type: "string",
+                                description: "Name of the API configuration to delete",
+                            },
+                        },
+                        required: ["name"],
+                    },
+                },
+                {
                     name: "api_get",
                     description: "Make a GET request to a configured API",
                     inputSchema: {
@@ -296,6 +310,8 @@ class ApiCallerServer {
                         return this.handleSetConfig(args);
                     case "list_api_configs":
                         return this.handleListConfigs();
+                    case "delete_api_config":
+                        return this.handleDeleteConfig(args);
                     case "api_get":
                         return this.handleApiRequest("GET", args);
                     case "api_post":
@@ -345,12 +361,29 @@ class ApiCallerServer {
             baseUrl: this.configs[key].baseUrl,
             hasAuth: !!this.configs[key].authentication,
             authType: this.configs[key].authentication?.type || null,
+            configFilePath: this.configPath,
         }));
         return {
             content: [
                 {
                     type: "text",
-                    text: `Configured APIs:\n${JSON.stringify(configList, null, 2)}`,
+                    text: `Configured APIs:\n${JSON.stringify(configList, null, 2)}\n\nConfig file location: ${this.configPath}`,
+                },
+            ],
+        };
+    }
+    async handleDeleteConfig(args) {
+        const { name } = args;
+        if (!this.configs[name]) {
+            throw new McpError(ErrorCode.InvalidParams, `API configuration '${name}' not found`);
+        }
+        delete this.configs[name];
+        this.saveConfigs();
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `API configuration '${name}' has been deleted.`,
                 },
             ],
         };

@@ -28,7 +28,13 @@ Configure an API endpoint with authentication.
 ### 2. `list_api_configs`
 List all configured APIs.
 
-### 3. `api_get`
+### 3. `delete_api_config`
+Delete an API configuration.
+
+**Parameters:**
+- `name`: Name of the API configuration to delete
+
+### 4. `api_get`
 Make a GET request to a configured API.
 
 **Parameters:**
@@ -37,7 +43,7 @@ Make a GET request to a configured API.
 - `queryParams`: Query parameters (optional)
 - `headers`: Additional headers (optional)
 
-### 4. `api_post`
+### 5. `api_post`
 Make a POST request with JSON body.
 
 **Parameters:**
@@ -46,7 +52,7 @@ Make a POST request with JSON body.
 - `body`: Request body (JSON)
 - `headers`: Additional headers (optional)
 
-### 5. `api_put`
+### 6. `api_put`
 Make a PUT request with JSON body.
 
 **Parameters:**
@@ -55,15 +61,15 @@ Make a PUT request with JSON body.
 - `body`: Request body (JSON)
 - `headers`: Additional headers (optional)
 
-### 6. `api_delete`
+### 7. `api_delete`
 Make a DELETE request.
 
 **Parameters:**
-- `configName`: Name of the API configuration
+- `configName`: Name of the API configuration to use
 - `endpoint`: API endpoint
 - `headers`: Additional headers (optional)
 
-### 7. `api_post_form` ⭐ NEW
+### 8. `api_post_form` ⭐ NEW
 Make a POST request with form data (supports file uploads).
 
 **Parameters:**
